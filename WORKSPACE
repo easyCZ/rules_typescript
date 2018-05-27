@@ -92,6 +92,16 @@ load("@build_bazel_rules_typescript//:defs.bzl", "ts_setup_workspace")
 
 ts_setup_workspace()
 
+http_archive(
+    name = "ts_protoc_gen",
+    strip_prefix = "ts-protoc-gen-0.7.3",
+    urls = [
+        "https://github.com/improbable-eng/ts-protoc-gen/archive/0.7.3.tar.gz"
+    ],
+    sha256 = "cdafa4163de060191776683ceba4d78adf24e973aa830e9acaa369bec138074d"
+)
+
+
 #############################################
 # Dependencies for generating documentation #
 #############################################

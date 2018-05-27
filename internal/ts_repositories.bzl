@@ -44,3 +44,9 @@ def ts_setup_workspace():
       package_json = "@build_bazel_rules_typescript//internal/protobufjs:package.json",
       yarn_lock = "@build_bazel_rules_typescript//internal/protobufjs:yarn.lock",
   )
+
+  yarn_install(
+      name = "build_bazel_rules_typescript_ts_protoc_gen_compiletime_deps",
+      package_json = "@build_bazel_rules_typescript//internal/ts_protoc_gen:package.json",
+      yarn_lock = "@build_bazel_rules_typescript//internal/ts_protoc_gen:yarn.lock",
+  )

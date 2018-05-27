@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"Protocol Buffers with Protobuf.js"
+"Protocol Buffers"
 
 def _run_pbjs(actions, executable, output_name, proto_files, suffix = ".js", wrap = "amd", amd_name = ""):
+  print(actions, executable, output_name, proto_files)
   js_file = actions.declare_file(output_name + suffix)
 
   # Create an intermediate file so that we can do some manipulation of the
@@ -103,7 +104,7 @@ def _ts_proto_library(ctx):
     ),
   )
 
-ts_proto_library = rule(
+ts_protoc_gen_library = rule(
     implementation = _ts_proto_library,
     attrs = {
         "deps": attr.label_list(doc = "proto_library targets"),
