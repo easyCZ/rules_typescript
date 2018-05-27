@@ -14,7 +14,7 @@
 "Protocol Buffers"
 
 def _run_pbjs(actions, executable, output_name, proto_files, suffix = ".js", wrap = "amd", amd_name = ""):
-  print(actions, executable, output_name, proto_files)
+  # print(actions, executable, output_name, proto_files)
   js_file = actions.declare_file(output_name + suffix)
 
   # Create an intermediate file so that we can do some manipulation of the
@@ -50,6 +50,50 @@ def _run_pbjs(actions, executable, output_name, proto_files, suffix = ".js", wra
   )
   return js_file
 
+def _run_tsprotoc(actions, executable, output_name, dep, i):
+  # print('actions', actions)
+  # print('exec', executable._tsprotoc)
+  # print(actions, executable, output_name, proto_files)
+  # js_file = actions.declare_file(output_name + suffix)
+
+  # Create an intermediate file so that we can do some manipulation of the
+  # generated .js output that makes it compatible with our named AMD loading.
+  js_tmpl_file = actions.declare_file(output_name + str(i) + ".js.tmpl")
+
+  # Reference of arguments:
+  # https://github.com/dcodeIO/ProtoBuf.js/#pbjs-for-javascript
+  args = actions.args()
+  # args.add(["--target", "static-module"])
+  # args.add(["--wrap", wrap])
+  # args.add("--strict-long") # Force usage of Long type with int64 fields
+  # args.add(["--out", js_file.path + ".tmpl"])
+  # args.add([f.path for f in proto_files])
+
+  print(dep.proto.direct_sources)
+  actions.run(
+      executable = executable._tsprotoc,
+      inputs = dep.proto.direct_sources,
+      outputs = [js_tmpl_file],
+      arguments = [args],
+      progress_message = "Compiling %s" % js_tmpl_file.path
+  )
+
+  print('path', js_tmpl_file.path)
+
+  # actions.expand_template(
+  #     template = js_tmpl_file,
+  #     output = js_file,
+  #     substitutions = {
+  #         # convert anonymous AMD module
+  #         #  define(["protobufjs/minimal"], function($protobuf) {
+  #         # to named
+  #         #  define("wksp/path/to/module", ["protobufjs/minimal"], ...
+  #         "define([": "define('%s/%s', [" % (amd_name, output_name),
+  #     }
+  # )
+  return js_tmpl_file
+
+
 def _run_pbts(actions, executable, js_file):
   ts_file = actions.declare_file(js_file.basename[:-len(".closure.js")] + ".d.ts")
 
@@ -69,17 +113,21 @@ def _run_pbts(actions, executable, js_file):
   return ts_file
 
 def _ts_proto_library(ctx):
+  # print(ctx)
   sources = depset()
-  for dep in ctx.attr.deps:
+  output_name = ctx.attr.output_name or ctx.label.name
+  # print('depset', sources)
+  for i, dep in enumerate(ctx.attr.deps):
     if not hasattr(dep, "proto"):
       fail("ts_proto_library dep %s must be a proto_library rule" % dep.label)
     # TODO(alexeagle): go/new-proto-library suggests
     # > should not parse .proto files. Instead, they should use the descriptor
     # > set output from proto_library
     # but protobuf.js doesn't seem to accept that bin format
+    # print('dep', dep.files)
+    # print('proto', repr(dep.proto))
+    _run_tsprotoc(ctx.actions, ctx.executable, output_name, dep, i)
     sources = depset(transitive = [sources, dep.proto.transitive_sources])
-
-  output_name = ctx.attr.output_name or ctx.label.name
 
   js_es5 = _run_pbjs(ctx.actions, ctx.executable, output_name, sources,
                      amd_name = "/".join([p for p in [
@@ -111,8 +159,16 @@ ts_protoc_gen_library = rule(
         "output_name": attr.string(
             doc = """Name of the resulting module, which you will import from.
             If not specified, the name will match the target's name."""),
-        "_pbjs": attr.label(default = Label("//internal/protobufjs:pbjs"),
-            executable = True, cfg = "host"),
+        "_tsprotoc": attr.label(
+          default = Label("//internal/ts_protoc_gen:ts_protoc_gen"),
+          executable = True, 
+          cfg = "host"
+        ),
+        "_pbjs": attr.label(
+          default = Label("//internal/protobufjs:pbjs"),
+          executable = True, 
+          cfg = "host"
+        ),
         "_pbts": attr.label(default = Label("//internal/protobufjs:pbts"),
             executable = True, cfg = "host"),
     },

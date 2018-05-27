@@ -7,13 +7,30 @@ exports_files([
     "ts_protoc_gen_library.bzl",
 ])
 
+# nodejs_binary(
+#     name = "protoc_gen_ts",
+#     node_modules = "@ts_protoc_gen//:node_modules",
+#     data = [
+#       "@ts_protoc_gen//src:src",
+#     ],
+#     entry_point = "ts_protoc_gen/src/index",
+#     args = ["--node_options=--expose-gc"],
+# )
+
 nodejs_binary(
-    name = "pbjs",
+    name = "ts_protoc_gen",
     node_modules = "@build_bazel_rules_typescript_protobufs_compiletime_deps//:node_modules",
-    entry_point = "protobufjs/bin/pbjs",
+    entry_point = "ts-protoc-gen/bin/index",
 )
-nodejs_binary(
-    name = "pbts",
-    node_modules = "@build_bazel_rules_typescript_protobufs_compiletime_deps//:node_modules",
-    entry_point = "protobufjs/bin/pbts",
-)
+
+
+# nodejs_binary(
+#     name = "pbjs",
+#     node_modules = "@build_bazel_rules_typescript_protobufs_compiletime_deps//:node_modules",
+#     entry_point = "protobufjs/bin/pbjs",
+# )
+# nodejs_binary(
+#     name = "pbts",
+#     node_modules = "@build_bazel_rules_typescript_protobufs_compiletime_deps//:node_modules",
+#     entry_point = "protobufjs/bin/pbts",
+# )
